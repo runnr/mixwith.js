@@ -5,7 +5,8 @@ import {assert} from 'chai';
 
 // Enable the @@hasInstance patch in HasInstance
 const originalHasInstance = Symbol.hasInstance;
-Symbol.hasInstance = Symbol.hasInstance || Symbol('hasInstance');
+if(!originalHasInstance)
+  Symbol.hasInstance = Symbol('hasInstance');
 
 let A = Mixin((superclass) => class A extends superclass {
   foo() {
@@ -88,21 +89,7 @@ class DwithAwithB extends mix(D).with(B, A) {
   }
 }
 
-// class DwithAwithC extends mix(D).with(C, A) {
-//   constructor() {
-//     console.log('DwithAwithC.constructor');
-//     super();
-//   }
-//
-//   bar() {
-//     console.log('DwithAwithC.bar');
-//     super.bar();
-//   }
-//
-//   qux() {
-//     console.log('DwithAwithC.qux');
-//   }
-// }
+class ObjectWithA extends mix().with(A) {}
 
 suite('mix', () => {
 
@@ -113,6 +100,12 @@ suite('mix', () => {
 
   test('mixin application is on prototype chain', () => {
     let o = new DwithA();
+    assert.isTrue(o.__proto__.__proto__.hasOwnProperty(_mixinRef));
+    assert.equal(o.__proto__.__proto__[_mixinRef], A[_originalMixin]);
+  });
+
+  test('mix() can omit the superclass', () => {
+    let o = new ObjectWithA();
     assert.isTrue(o.__proto__.__proto__.hasOwnProperty(_mixinRef));
     assert.equal(o.__proto__.__proto__[_mixinRef], A[_originalMixin]);
   });

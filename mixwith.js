@@ -1,5 +1,3 @@
-'use strict';
-
 (function (global, factory) {
   if (typeof define === "function" && define.amd) {
     define(['exports'], factory);
@@ -13,16 +11,21 @@
     global.mixwith = mod.exports;
   }
 })(this, function (exports) {
+  'use strict';
+
   Object.defineProperty(exports, "__esModule", {
     value: true
   });
-
   const _cachedApplicationRef = exports._cachedApplicationRef = Symbol('_cachedApplicationRef');
-
   const _mixinRef = exports._mixinRef = Symbol('_mixinRef');
-
   const _originalMixin = exports._originalMixin = Symbol('_originalMixin');
 
+  /**
+   * Sets the prototype of mixin to wrapper so that properties set on mixin are
+   * inherited by the wrapper.
+   *
+   * This is needed in order to implement @@hasInstance as a decorator function.
+   */
   const wrap = exports.wrap = (mixin, wrapper) => {
     Object.setPrototypeOf(wrapper, mixin);
     if (!mixin[_originalMixin]) {
@@ -31,6 +34,11 @@
     return wrapper;
   };
 
+  /**
+   * Decorates mixin so that it caches its applications. When applied multiple
+   * times to the same superclass, mixin will only create one subclass and
+   * memoize it.
+   */
   const Cached = exports.Cached = mixin => wrap(mixin, superclass => {
     // Get or create a symbol used to look up a previous application of mixin
     // to the class. This symbol is unique per mixin definition, so a class will have N
@@ -51,6 +59,10 @@
     return application;
   });
 
+  /**
+   * Adds @@hasInstance (ES2015 instanceof support) to mixin.
+   * Note: @@hasInstance is not supported in any browsers yet.
+   */
   const HasInstance = exports.HasInstance = mixin => {
     if (Symbol.hasInstance && !mixin.hasOwnProperty(Symbol.hasInstance)) {
       Object.defineProperty(mixin, Symbol.hasInstance, {
@@ -69,6 +81,10 @@
     return mixin;
   };
 
+  /**
+   * A basic mixin decorator that sets up a reference from mixin applications
+   * to the mixin defintion for use by other mixin decorators.
+   */
   const BareMixin = exports.BareMixin = mixin => wrap(mixin, superclass => {
     // Apply the mixin
     let application = mixin(superclass);
@@ -79,18 +95,22 @@
     return application;
   });
 
+  /**
+   * Decorates a mixin function to add application caching and instanceof
+   * support.
+   */
   const Mixin = exports.Mixin = mixin => Cached(HasInstance(BareMixin(mixin)));
 
   const mix = exports.mix = superClass => new MixinBuilder(superClass);
 
   class MixinBuilder {
+
     constructor(superclass) {
-      this.superclass = superclass;
+      this.superclass = superclass || class {};
     }
 
     with() {
       return Array.from(arguments).reduce((c, m) => m(c), this.superclass);
     }
-
   }
 });
