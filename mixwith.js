@@ -103,6 +103,8 @@
 
   const mix = exports.mix = superClass => new MixinBuilder(superClass);
 
+  const mixins = exports.mixins = (...mixins) => mix().with(...mixins);
+
   class MixinBuilder {
 
     constructor(superclass) {

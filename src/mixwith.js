@@ -87,6 +87,8 @@ export const Mixin = (mixin) => Cached(HasInstance(BareMixin(mixin)));
 
 export const mix = (superClass) => new MixinBuilder(superClass);
 
+export const mixins = (...mixins) => mix().with(...mixins);
+
 class MixinBuilder {
 
   constructor(superclass) {
